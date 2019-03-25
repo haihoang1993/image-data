@@ -93,7 +93,8 @@ DataPixabay.prototype.downLoadImgge = async (category, page, countFile = 1) => {
                     down = await FileDownLoadManeger.downloadImageByID(item.id, urlF, item.id + ".jpg", tag);
                 } catch (e) {
                     let temp = item.url.indexOf("/illustrations/");
-                    if (temp !== -1) {
+                    let temp3 = item.url.indexOf("/vectors/");
+                    if (temp !== -1 || temp3!==-1) {
                         down = -100;
                         result = {...result, errImgPng: true}
                     }
