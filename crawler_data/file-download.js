@@ -2,14 +2,18 @@ const fs = require('fs')
 const Path = require('path')
 const Axios = require('axios')
 const imageFolder = Path.resolve(__dirname) + '/images/';
-
+let indexSession=0;
 function getSession(){
     let arr=[
         '".eJxVjMsOwiAQRf-FtWmgFCr-DBmHaYp9YGCIC-O_i10Y3d57znkKD5VnXwtlP0OZxUX0atROWy1hdAENKROMnmDoUcPZwGTBSTWgFCfBVBhTWiI175HyQqGtP8kr4EJ7aO89pxshd5XjWjqshdN2gF080B028il72iCuX-8vFj8dJY2zenTi9Qb3HD-w:1h86tE:1lp5GnAeDUf4AwYhFbafrkEd10w"'
     ];
-    let num=Math.floor((Math.random() * arr.length) + 1)-1;
-    console.log("num random:",num);
-    return arr[num];
+    let ss=indexSession;
+    if(indexSession<arr.length-1){
+        indexSession++;
+    } else {
+        indexSession=0;
+    }
+    return arr[ss];
 }
 
 async function downloadImage(url, pathFileSave, nameFile = 'test.jpg') {
@@ -67,7 +71,11 @@ function getLinkById(id,tag) {
     // https://pixabay.com/images/download/angel-4060395.jpg?attachment
     //  https://pixabay.com/images/download/dawn-3793717.jpg?attachment
     // return "https://pixabay.com/images/download/dawn-" + id + ".jpg?attachment";
-    let tagTemp=tag.replace(' ','-')
+
+    let tagTemp=tag;
+    do {
+        tagTemp=tagTemp.replace(' ','-');
+    } while (tagTemp.indexOf(' ')!==-1);
     return "https://pixabay.com/images/download/"+tagTemp+"-" + id + ".jpg?attachment";
 }
 

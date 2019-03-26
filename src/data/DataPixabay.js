@@ -81,35 +81,47 @@ DataPixabay.prototype.downLoadImgge = async (category, page, countFile = 1) => {
             else console.log('Done!')
         });
     }
-    ;
+    let listDownload=[];
     await asyncForEach(listItemNotDown, (async (item, index, arr) => {
         if (index <= (countFile - 1)) {
             let checkHasfile = await checkHasFile(category, item.id);
             console.log("item:", item);
             let tag = item.tag.split(', ')[0].toLowerCase();
+            let tempCheck=item;
             if (!checkHasfile) {
                 let down = -1;
-                try {
-                    down = await FileDownLoadManeger.downloadImageByID(item.id, urlF, item.id + ".jpg", tag);
-                } catch (e) {
-                    let temp = item.url.indexOf("/illustrations/");
-                    let temp3 = item.url.indexOf("/vectors/");
-                    if (temp !== -1 || temp3!==-1) {
-                        down = -100;
-                        result = {...result, errImgPng: true}
+                let temp = item.url.indexOf("/illustrations/");
+                let temp3 = item.url.indexOf("/vectors/");
+                if (temp !== -1 || temp3!==-1) {
+                    down = -100;
+                    result = {...result, errImgPng: true}
+                }
+                if(down!==-100) {
+                    try {
+                        down = await FileDownLoadManeger.downloadImageByID(item.id, urlF, item.id + ".jpg", tag);
+                    } catch (e) {
+                        // let temp = item.url.indexOf("/illustrations/");
+                        // let temp3 = item.url.indexOf("/vectors/");
+                        // if (temp !== -1 || temp3!==-1) {
+                        //     down = -100;
+                        //     result = {...result, errImgPng: true}
+                        // }
                     }
                 }
-
                 if (down === -1) {
                     numError++;
+                    tempCheck={...tempCheck,err:numError}
                 } else if (down === -100) {
                     let im = await {...item, isDownload: true, isErrPng: true};
                     listItemNotDown[index] = im;
+                    tempCheck={...tempCheck,isErrPng: true}
                 } else {
+                    tempCheck={...tempCheck,err: 0,isDownload: true};
                     let im = await {...item, isDownload: true};
                     listItemNotDown[index] = im;
                     console.log("im:test", down);
                 }
+                listDownload.push(tempCheck);
             } else {
                 let im = await {...item, isDownload: true};
                 listItemNotDown[index] = im;
@@ -122,7 +134,7 @@ DataPixabay.prototype.downLoadImgge = async (category, page, countFile = 1) => {
         if (err) throw err;
         console.log('Saved file!');
     });
-    result = {...result, coutError: numError, listImage: listMerge};
+    result = {...result, coutError: numError,logDowload:listDownload, listImage: listMerge};
     // console.log("list c:", listMerge);
 
     return result;
