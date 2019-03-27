@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p> Download ok:  <%= checkDown %></p>
-    <p>Welcome to <%= title %></p>
-  </body>
+<head>
+    <title> Download: <%= cate %> </title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+</head>
+<body>
+
+<% for(var i = 0; i < listSession.length; i++) { %>
+    <br>
+    <hr>
+    <h1> ID: <%= (i + 1) %> </h1>
+    <h3> Category: <%= cate %> </h3>
+    <h4> Page: <%= pagew %>, Count file: <%= numPage %> </4>
+    <p> <%= listSession[i] %> </p>
+    <a style="font-size: 20px;color: crimson" target="_blank"
+       href="/data/<%= cate %>?page=<%= pagew %>&num=<%= numPage %>&ids=<%= i %>">Donwload </a>
+<% } %>
+</body>
 </html>

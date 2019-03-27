@@ -3,9 +3,14 @@ const Path = require('path')
 const Axios = require('axios')
 const imageFolder = Path.resolve(__dirname) + '/images/';
 let indexSession=0;
+
+var ListSession=[
+    '".eJxVzE0OwiAQQOG7sDYEOgXEy5BxoAEtxfCzary72oXR_fvezhyOHt1oobqILbILm6QBCxoEGutJBam8ggXniQDPCheNVsiZBDv94ivSPWz-7R-13AJ1PnpaG6fReslHyNORbpiDK9WFjGn9ur9Z-nykUFaDsez5AuoxN_w:1h8qyO:2ZVzU3qWykozAwRI_FQKu8RGVpU"'
+];
+
 function getSession(){
     let arr=[
-        '".eJxVjMsOwiAQRf-FtWmgFCr-DBmHaYp9YGCIC-O_i10Y3d57znkKD5VnXwtlP0OZxUX0atROWy1hdAENKROMnmDoUcPZwGTBSTWgFCfBVBhTWiI175HyQqGtP8kr4EJ7aO89pxshd5XjWjqshdN2gF080B028il72iCuX-8vFj8dJY2zenTi9Qb3HD-w:1h86tE:1lp5GnAeDUf4AwYhFbafrkEd10w"'
+        '".eJxVzE0OwiAQQOG7sDYEOgXEy5BxoAEtxfCzary72oXR_fvezhyOHt1oobqILbILm6QBCxoEGutJBam8ggXniQDPCheNVsiZBDv94ivSPWz-7R-13AJ1PnpaG6fReslHyNORbpiDK9WFjGn9ur9Z-nykUFaDsez5AuoxN_w:1h8qyO:2ZVzU3qWykozAwRI_FQKu8RGVpU"'
     ];
     let ss=indexSession;
     if(indexSession<arr.length-1){
@@ -16,13 +21,14 @@ function getSession(){
     return arr[ss];
 }
 
-async function downloadImage(url, pathFileSave, nameFile = 'test.jpg') {
+async function downloadImage(url, pathFileSave, nameFile = 'test.jpg',sseionID) {
     // let name = obj.id + "_" + typeSize + ".jpg";
     console.log("name szie:", nameFile);
 
     // const path = Path.resolve(__dirname, 'images/'+obj.category, Path.basename(url));
     const path = Path.resolve(pathFileSave, nameFile);
     console.log(path);
+    console.log("session:",sseionID);
     let options = {
         method: 'GET',
         dest: imageFolder,
@@ -31,11 +37,13 @@ async function downloadImage(url, pathFileSave, nameFile = 'test.jpg') {
         responseType: 'stream',
         headers:
             {
-                'cookie': 'sessionid='+getSession(),
+                'cookie': 'sessionid='+sseionID,
                 'cache-control': 'no-cache'
             }
     };
-    console.log("opption:",options);
+
+      //  console.log('callback');
+    // console.log("opption:",options);
     // axios image download with response type "stream"
 
     const response = await Axios(options);
@@ -81,8 +89,9 @@ function getLinkById(id,tag) {
 
 var FileDownLoadManeger = {
 
-    downloadImageByID: async (id, pathFileSave, nameFile = 'test.jpg',tag="",type='jpg') => {
-        let rl= await downloadImage(getLinkById(id,tag), pathFileSave, nameFile);
+    downloadImageByID: async (id, pathFileSave, nameFile = 'test.jpg',tag="",type='jpg',session) => {
+        console.log("ss temp:",session)
+        let rl= await  downloadImage(getLinkById(id,tag), pathFileSave, nameFile,session);
         const path1= Path.resolve(pathFileSave, nameFile);
         const stats =await fs.statSync(path1.toString());
         const fileSizeInBytes = stats.size;
@@ -101,4 +110,4 @@ var FileDownLoadManeger = {
     }
 }
 
-module.exports = FileDownLoadManeger;
+module.exports = {FileDownLoadManeger,ListSession};

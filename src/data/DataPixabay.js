@@ -5,7 +5,7 @@ const fs = require('fs');
 const axios = require('axios'),
     path = require("path"),
     mkdirp = require('mkdirp'),
-    FileDownLoadManeger = require('../../crawler_data/file-download');
+    {FileDownLoadManeger,ListSession} = require('../../crawler_data/file-download');
 
 const imageFolder = path.resolve(__dirname) + '/data_raw_pixabay';
 const imageFolderFileDown = path.resolve(__dirname) + '/data_img_down';
@@ -47,15 +47,14 @@ DataPixabay.prototype.checkHasFile = async function (idCategory, idPhoto) {
     return await checkHasFile(idCategory, idPhoto);
 };
 
-DataPixabay.prototype.downLoadImgge = async (category, page, countFile = 1) => {
+DataPixabay.prototype.downLoadImgge = async (category, page, countFile = 1,numIdsession) => {
     let result = {};
     let numError = 0;
     let fileDataJson = imageFolder + "/" + category + "/" + "page_" + page + '.json';
     let readFile = fs.readFileSync(fileDataJson, 'utf8');
-
+    let session=numIdsession;
     let listItem = JSON.parse(readFile.toString());
     console.log("list:", listItem.length);
-
     let listItemDonw = listItem.filter((item) => {
         return item.isDownload;
     });
@@ -63,14 +62,6 @@ DataPixabay.prototype.downLoadImgge = async (category, page, countFile = 1) => {
     let listItemNotDown = listItem.filter((item) => {
         return !item.isDownload
     });
-
-    // console.log("list not:",listItemNotDown);
-    // let cut = countFile;
-    // let newList = [];
-    // if (listItemNotDown.length <= countFile)
-    //     newList =listItemNotDown ;
-    // else
-    //     newList = listItemNotDown.splice(0, cut);
 
     let urlF = imageFolderFileDown + '/' + category + '/' + 'page_' + page + '/';
     let check = await fs.existsSync(urlF);
@@ -81,42 +72,39 @@ DataPixabay.prototype.downLoadImgge = async (category, page, countFile = 1) => {
             else console.log('Done!')
         });
     }
-    let listDownload=[];
+    let listDownload = [];
+
     await asyncForEach(listItemNotDown, (async (item, index, arr) => {
         if (index <= (countFile - 1)) {
             let checkHasfile = await checkHasFile(category, item.id);
             console.log("item:", item);
             let tag = item.tag.split(', ')[0].toLowerCase();
-            let tempCheck=item;
+            let tempCheck = item;
+            let sss = "";
+
             if (!checkHasfile) {
                 let down = -1;
                 let temp = item.url.indexOf("/illustrations/");
                 let temp3 = item.url.indexOf("/vectors/");
-                if (temp !== -1 || temp3!==-1) {
+                if (temp !== -1 || temp3 !== -1) {
                     down = -100;
                     result = {...result, errImgPng: true}
                 }
-                if(down!==-100) {
+                if (down !== -100) {
                     try {
-                        down = await FileDownLoadManeger.downloadImageByID(item.id, urlF, item.id + ".jpg", tag);
+                        down = await FileDownLoadManeger.downloadImageByID(item.id, urlF, item.id + ".jpg", tag,'', session);
                     } catch (e) {
-                        // let temp = item.url.indexOf("/illustrations/");
-                        // let temp3 = item.url.indexOf("/vectors/");
-                        // if (temp !== -1 || temp3!==-1) {
-                        //     down = -100;
-                        //     result = {...result, errImgPng: true}
-                        // }
                     }
                 }
                 if (down === -1) {
                     numError++;
-                    tempCheck={...tempCheck,err:numError}
+                    tempCheck = {...tempCheck, err: numError};
                 } else if (down === -100) {
                     let im = await {...item, isDownload: true, isErrPng: true};
                     listItemNotDown[index] = im;
-                    tempCheck={...tempCheck,isErrPng: true}
+                    tempCheck = {...tempCheck, isErrPng: true}
                 } else {
-                    tempCheck={...tempCheck,err: 0,isDownload: true};
+                    tempCheck = {...tempCheck, err: 0, isDownload: true};
                     let im = await {...item, isDownload: true};
                     listItemNotDown[index] = im;
                     console.log("im:test", down);
@@ -130,13 +118,21 @@ DataPixabay.prototype.downLoadImgge = async (category, page, countFile = 1) => {
         }
     }));
     let listMerge = [...listItemDonw, ...listItemNotDown];
+
+    listItemDonw = listMerge.filter((item) => {
+        return item.isDownload;
+    });
+
+    listItemNotDown = listMerge.filter((item) => {
+        return !item.isDownload
+    });
+
     await fs.writeFileSync(fileDataJson, JSON.stringify(listMerge), function (err) {
         if (err) throw err;
         console.log('Saved file!');
     });
-    result = {...result, coutError: numError,logDowload:listDownload, listImage: listMerge};
+    result = {...result, coutError: numError,countFalse:listItemNotDown.length,countTrue:listItemDonw.length, logDowload: listDownload, listImage: listMerge};
     // console.log("list c:", listMerge);
-
     return result;
 };
 
