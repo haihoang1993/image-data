@@ -3,18 +3,102 @@
 <head>
     <title> Download: <%= cate %> </title>
     <link rel='stylesheet' href='/stylesheets/style.css'/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <style type="text/css">
+        .lds-dual-ring {
+            display: inline-block;
+            width: 64px;
+            height: 64px;
+        }
+        .lds-dual-ring:after {
+            content: " ";
+            display: block;
+            width: 46px;
+            height: 46px;
+            margin: 1px;
+            border-radius: 50%;
+            border: 5px solid #fdd;
+            border-color: #fdd transparent #fdd transparent;
+            animation: lds-dual-ring 1.2s linear infinite;
+        }
+        @keyframes lds-dual-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        span{
+            margin-left: 20px;
+        }
+
+    </style>
 </head>
 <body>
+<button onclick="startDownload()"> Start download </button>
+<div id="list">
+    <% for(var i = 0; i < listSession.length; i++) { %>
+        <div id="<%= i %>" class="item">
+            <br>
+            <hr>
+            <h1> ID: <%= (i + 1) %> </h1>
+            <h3> Category: <%= cate %> </h3>
+            <div class="ketqua">
 
-<% for(var i = 0; i < listSession.length; i++) { %>
-    <br>
-    <hr>
-    <h1> ID: <%= (i + 1) %> </h1>
-    <h3> Category: <%= cate %> </h3>
-    <h4> Page: <%= pagew %>, Count file: <%= numPage %> </4>
-    <p> <%= listSession[i] %> </p>
-    <a style="font-size: 20px;color: crimson" target="_blank"
-       href="/data/<%= cate %>?page=<%= pagew %>&num=<%= numPage %>&ids=<%= i %>">Donwload </a>
+            </div>
+            <h4> Page: <%= pagew %>, Count file: <%= numPage %> </h4>
+            <p> <%= listSession[i] %> </p>
+
+            <div class="loading">
+                <div class="lds-dual-ring"></div>
+            </div>
+            <a style="font-size: 20px;color: crimson" target="_blank"
+               href="/data/<%= cate %>?page=<%= pagew %>&num=<%= numPage %>&ids=<%= i %>">Donwload </a>
+        </div>
 <% } %>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(async function () {
+        $('.loading').hide();
+    })
+    function startDownload(){
+        $(document).ready(async function () {
+            let lenth= $("#list div.item").length;
+            $('.loading').show();
+            for (let i=0;i<lenth;i++){
+                let idst='#list #'+i;
+                let e=$('#list #'+i+' a');
+                console.log("down:",i)
+                await fetchAsync('http://localhost:3030'+e.attr("href"))
+                    .then(data => {
+                        console.log(data);
+                        $(idst + ' .ketqua').empty();
+                        $(idst + ' .ketqua').append(
+                            '<span> Count error: '+data.coutError+'</span>'+
+                            '\t    <span> Count True: '+data.countTrue+'</span>'+
+                            '\t    <span> Count false: '+data.countFalse+'</span>'
+                        );
+                        $(idst +' .loading').hide();
+                        // countFalse: 98
+                        // countTrue: 2
+                        // coutError: 0
+                        // errImgPng: true
+                    })
+                    .catch(reason => console.log(reason.message));
+            }
+        });
+    }
+    // async function
+    async function fetchAsync (url) {
+        // await response of fetch call
+        let response = await fetch(url);
+        // only proceed once promise is resolved
+        let data = await response.json();
+        // only proceed once second promise is resolved
+        return data;
+    }
+</script>
 </body>
 </html>
